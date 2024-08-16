@@ -32,18 +32,7 @@ matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
       '@YOUR_USERNAME:{{ matrix_domain }}': admin
 ```
 
-## encryption
-
 Encryption support is off by default. If you would like to enable encryption, add the following to your `vars.yml` file:
-
-**for all bridges with encryption support**:
-
-```yaml
-matrix_bridges_encryption_enabled: true
-```
-
-**Alternatively**, for a specific bridge:
-
 ```yaml
 matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
   bridge:
@@ -52,24 +41,6 @@ matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
       default: true
 ```
 
-## relay mode
-
-Relay mode is off by default. If you would like to enable relay mode, add the following to your `vars.yml` file:
-
-**for all bridges with relay mode support**:
-
-```yaml
-matrix_bridges_relay_enabled: true
-```
-
-**Alternatively**, for a specific bridge:
-
-```yaml
-matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
-  bridge:
-    relay:
-      enabled: true
-```
 
 You can only have one `matrix_mautrix_SERVICENAME_configuration_extension_yaml` definition in `vars.yml` per bridge, so if you need multiple pieces of configuration there, just merge them like this:
 
@@ -93,7 +64,7 @@ Can be used to set the username for the bridge.
 
 ## Discovering additional configuration options
 
-You may wish to look at `roles/custom/matrix-bridge-mautrix-SERVICENAME/templates/config.yaml.j2` and `roles/custom/matrix-bridge-mautrix-SERVICENAME/defaults/main.yml` to find other things you would like to configure.
+You may wish to look at `roles/matrix-bridge-mautrix-SERVICENAME/templates/config.yaml.j2` and `roles/matrix-bridge-mautrix-SERVICENAME/defaults/main.yml` to find other things you would like to configure.
 
 
 ## Set up Double Puppeting
@@ -126,7 +97,7 @@ If you have issues with a service, and are requesting support, the higher levels
 
 ## Usage
 
-You then need to start a chat with `@SERVICENAMEbot:YOUR_DOMAIN` (where `YOUR_DOMAIN` is your base domain, not the `matrix.` domain).
+You then need to start a chat with `@SERVICENAMEbot:YOUR_DOMAIN` (where `YOUR_DOMAIN` is your base domain, not the `matrix.` domain). 
 
 Send `login ` to the bridge bot to get started You can learn more here about authentication from the bridge's official documentation on Authentication https://docs.mau.fi/bridges/python/SERVICENAME/authentication.html  .
 

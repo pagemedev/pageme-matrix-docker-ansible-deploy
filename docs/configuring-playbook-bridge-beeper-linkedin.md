@@ -1,8 +1,8 @@
 # Setting up Beeper Linkedin (optional)
 
-The playbook can install and configure [beeper-linkedin](https://github.com/beeper/linkedin) for you, for bridging to [LinkedIn](https://www.linkedin.com/) Messaging. This bridge is based on the mautrix-python framework and can be configured in a similar way to the other mautrix bridges
+The playbook can install and configure [beeper-linkedin](https://gitlab.com/beeper/linkedin) for you, for bridging to [LinkedIn](https://www.linkedin.com/) Messaging. This bridge is based on the mautrix-python framework and can be configured in a similar way to the other mautrix bridges
 
-See the project's [documentation](https://github.com/beeper/linkedin/blob/master/README.md) to learn what it does and why it might be useful to you.
+See the project's [documentation](https://gitlab.com/beeper/linkedin/-/blob/master/README.md) to learn what it does and why it might be useful to you.
 
 ```yaml
 matrix_beeper_linkedin_enabled: true
@@ -27,14 +27,18 @@ matrix_beeper_linkedin_configuration_extension_yaml: |
       '@YOUR_USERNAME:YOUR_DOMAIN': admin
 ```
 
-You may wish to look at `roles/custom/matrix-bridge-beeper-linkedin/templates/config.yaml.j2` to find other things you would like to configure.
+You may wish to look at `roles/matrix-bridge-beeper-linkedin/templates/config.yaml.j2` to find other things you would like to configure.
 
 
 ## Set up Double Puppeting
 
-If you'd like to use [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) (hint: you most likely do), you have to enable Shared Secred Auth.
+If you'd like to use [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) (hint: you most likely do), you have 2 ways of going about it.
+
+### Method 1: automatically, by enabling Shared Secret Auth
 
 The bridge will automatically perform Double Puppeting if you enable [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) for this playbook.
+
+This is the recommended way of setting up Double Puppeting, as it's easier to accomplish, works for all your users automatically, and has less of a chance of breaking in the future.
 
 
 ## Usage

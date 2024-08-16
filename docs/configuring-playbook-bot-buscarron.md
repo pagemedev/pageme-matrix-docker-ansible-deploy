@@ -2,30 +2,22 @@
 
 The playbook can install and configure [buscarron](https://gitlab.com/etke.cc/buscarron) for you.
 
-Buscarron is bot that receives HTTP POST submissions of web forms and forwards them to a Matrix room.
+It's a bot you can use to setup **your own helpdesk on matrix**
+It's a bot you can use to send any form (HTTP POST, HTML) to a (encrypted) matrix room
 
+## Registering the bot user
 
-## Decide on a domain and path
+By default, the playbook will set up the bot with a username like this: `@bot.buscarron:DOMAIN`.
 
-By default, Buscarron is configured to use its own dedicated domain (`buscarron.DOMAIN`) and requires you to [adjust your DNS records](#adjusting-dns-records).
+(to use a different username, adjust the `matrix_bot_buscarron_login` variable).
 
-You can override the domain and path like this:
+You **need to register the bot user manually** before setting up the bot. You can use the playbook to [register a new user](registering-users.md):
 
-```yaml
-# Switch to the domain used for Matrix services (`matrix.DOMAIN`),
-# so we won't need to add additional DNS records for Buscarron.
-matrix_bot_buscarron_hostname: "{{ matrix_server_fqn_matrix }}"
-
-# Expose under the /buscarron subpath
-matrix_bot_buscarron_path_prefix: /buscarron
+```
+ansible-playbook -i inventory/hosts setup.yml --extra-vars='username=bot.buscarron password=PASSWORD_FOR_THE_BOT admin=no' --tags=register-user
 ```
 
-
-## Adjusting DNS records
-
-Once you've decided on the domain and path, **you may need to adjust your DNS** records to point the Buscarron domain to the Matrix server.
-
-If you've decided to reuse the `matrix.` domain, you won't need to do any extra DNS configuration.
+Choose a strong password for the bot. You can generate a good password with a command like this: `pwgen -s 64 1`.
 
 
 ## Adjusting the playbook configuration
@@ -35,10 +27,7 @@ Add the following configuration to your `inventory/host_vars/matrix.DOMAIN/vars.
 ```yaml
 matrix_bot_buscarron_enabled: true
 
-# Uncomment and adjust this part if you'd like to use a username different than the default
-# matrix_bot_buscarron_login: bot.buscarron
-
-# Generate a strong password here. Consider generating it with `pwgen -s 64 1`
+# Adjust this to whatever password you chose when registering the bot user
 matrix_bot_buscarron_password: PASSWORD_FOR_THE_BOT
 
 # Adjust accepted forms
@@ -47,10 +36,20 @@ matrix_bot_buscarron_forms:
     room: "!yourRoomID:DOMAIN" # (mandatory) Room ID where form submission will be posted
     redirect: https://DOMAIN # (mandatory) To what page user will be redirected after the form submission
     ratelimit: 1r/m # (optional) rate limit of the form, format: <max requests>r/<interval:s,m>, eg: 1r/s or 54r/m
-    hasemail: 1 # (optional) form has "email" field that should be validated
     extensions: [] # (optional) list of form extensions (not used yet)
 
-matrix_bot_buscarron_spamlist: [] # (optional) list of emails/domains/hosts (with wildcards support) that should be rejected automatically
+matrix_bot_buscarron_spam_hosts: [] # (optional) list of email domains/hosts that should be rejected automatically
+matrix_bot_buscarron_spam_emails: [] # (optional) list of email addresses that should be rejected automatically
+```
+
+You will also need to add a DNS record so that buscarron can be accessed.
+By default buscarron will use https://buscarron.DOMAIN so you will need to create an CNAME record for `buscarron`.
+See [Configuring DNS](configuring-dns.md).
+
+If you would like to use a different domain, add the following to your configuration file (changing it to use your preferred domain):
+
+```yaml
+matrix_server_fqn_buscarron: "form.{{ matrix_domain }}"
 ```
 
 
@@ -58,15 +57,9 @@ matrix_bot_buscarron_spamlist: [] # (optional) list of emails/domains/hosts (wit
 
 After configuring the playbook, run the [installation](installing.md) command again:
 
-```sh
-ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
 ```
-
-**Notes**:
-
-- the `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account
-
-- if you change the bot password (`matrix_bot_buscarron_password` in your `vars.yml` file) subsequently, the bot user's credentials on the homeserver won't be updated automatically. If you'd like to change the bot user's password, use a tool like [synapse-admin](configuring-playbook-synapse-admin.md) to change it, and then update `matrix_bot_buscarron_password` to let the bot know its new password
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start
+```
 
 
 ## Usage
@@ -78,13 +71,5 @@ To use the bot, invite the `@bot.buscarron:DOMAIN` to the room you specified in 
 <!--your fields-->
 </form>
 ```
-
-**NOTE**: to fight against spam, Buscarron is **very aggressive when it comes to banning** and will ban you if:
-
-- if you hit the homepage (HTTP `GET` request to `/`)
-- if you submit a form to the wrong URL (`POST` request to `/non-existing-form`)
-- if `hasemail` is enabled for the form (like in the example above) and you don't submit an `email` field
-
-If you get banned, you'd need to restart the process by running the playbook with `--tags=start` or running `systemctl restart matrix-bot-buscarron` on the server.
 
 You can also refer to the upstream [documentation](https://gitlab.com/etke.cc/buscarron).

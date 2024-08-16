@@ -33,7 +33,7 @@ matrix_ma1sd_matrixorg_forwarding_enabled: true
 ## Customizing email templates
 
 If you'd like to change the default email templates used by ma1sd, take a look at the `matrix_ma1sd_threepid_medium_email_custom_` variables
-(in the `roles/custom/matrix-ma1sd/defaults/main.yml` file.
+(in the `roles/matrix-ma1sd/defaults/main.yml` file.
 
 
 ## ma1sd-controlled Registration
@@ -44,9 +44,9 @@ To use the [Registration](https://github.com/ma1uta/ma1sd/blob/master/docs/featu
 
 - `matrix_synapse_enable_registration_captcha` - to validate registering users using reCAPTCHA, as described in the [enabling reCAPTCHA](configuring_captcha.md) documentation.
 
-- `matrix_synapse_registrations_require_3pid` - a list of 3pid types (among `'email'`, `'msisdn'`) required by the Synapse server for registering
+- `matrix_synapse_registrations_require_3pid` - to control the types of 3pid (`'email'`, `'msisdn'`) required by the Synapse server for registering
 
-- variables prefixed with `matrix_ma1sd_container_labels_` (e.g. `matrix_ma1sd_container_labels_matrix_client_3pid_registration_enabled`) - to configure the Traefik reverse-proxy to capture and send registration requests to ma1sd (instead of Synapse), so it can apply its additional functionality
+- variables prefixed with `matrix_nginx_proxy_proxy_matrix_3pid_registration_` (e.g. `matrix_nginx_proxy_proxy_matrix_3pid_registration_enabled`) - to configure the integrated nginx webserver to send registration requests to ma1sd (instead of Synapse), so it can apply its additional functionality
 
 - `matrix_ma1sd_configuration_extension_yaml` - to configure ma1sd as required. See the [Registration feature's docs](https://github.com/ma1uta/ma1sd/blob/master/docs/features/registration.md) for inspiration. Also see the [Additional features](#additional-features) section below to learn more about how to use `matrix_ma1sd_configuration_extension_yaml`.
 
@@ -86,7 +86,7 @@ You can refer to the [ma1sd website](https://github.com/ma1uta/ma1sd) for more d
 
 To use a more custom configuration, you can define a `matrix_ma1sd_configuration_extension_yaml` string variable
 and put your configuration in it.
-To learn more about how to do this, refer to the information about `matrix_ma1sd_configuration_extension_yaml` in the [default variables file](../roles/custom/matrix-ma1sd/defaults/main.yml) of the ma1sd component.
+To learn more about how to do this, refer to the information about `matrix_ma1sd_configuration_extension_yaml` in the [default variables file](../roles/matrix-ma1sd/defaults/main.yml) of the ma1sd component.
 
 ## Example: SMS verification
 

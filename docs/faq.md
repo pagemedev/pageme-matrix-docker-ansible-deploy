@@ -61,7 +61,7 @@ There are 3 ways to get into Martix, depending on your technical ability and nee
 
 ### How do I set up my own Matrix server?
 
-Normally, you'd first choose the [Matrix](https://matrix.org/) server software you'd like to run. At the time of this writing (January/2021), there's only one fully-featured server program, so there's only one reasonable choice. That's [Synapse](https://github.com/element-hq/synapse).
+Normally, you'd first choose the [Matrix](https://matrix.org/) server software you'd like to run. At the time of this writing (January/2021), there's only one fully-featured server program, so there's only one reasonable choice. That's [Synapse](https://github.com/matrix-org/synapse).
 
 There are [many guides about installing Synapse](https://matrix.org/docs/guides/#installing-synapse). Using this Ansible playbook is just one way of doing it.
 
@@ -82,13 +82,13 @@ To learn more, see our [dedicated Ansible documentation page](ansible.md).
 
 ### Why use this playbook and not install Synapse and other things manually?
 
-There are various guides telling you how easy it is to install [Synapse](https://github.com/element-hq/synapse).
+There are various guides telling you how easy it is to install [Synapse](https://github.com/matrix-org/synapse).
 
 Reading the documentation of this Ansible playbook, you may also be thinking:
 
 > I don't know what [Ansible](https://www.ansible.com/) is. I don't know what [Docker](https://www.docker.com/) is. This looks more complicated.
 
-.. so you may be leaning toward [installing Synapse manually](https://github.com/element-hq/synapse/blob/master/INSTALL.md).
+.. so you may be leaning toward [installing Synapse manually](https://github.com/matrix-org/synapse/blob/master/INSTALL.md).
 
 The problem with a manual installation is:
 
@@ -125,7 +125,7 @@ This is similar to the [EMnify/matrix-synapse-auto-deploy](https://github.com/EM
 
 - this one installs everything in a single directory (`/matrix` by default) and **doesn't "contaminate" your server** with files all over the place
 
-- this one **doesn't necessarily take over** ports 80 and 443. By default, it sets up [Traefik](https://doc.traefik.io/traefik/) for you there, but you can also [use your own webserver](configuring-playbook-own-webserver.md)
+- this one **doesn't necessarily take over** ports 80 and 443. By default, it sets up nginx for you there, but you can also [use your own webserver](configuring-playbook-own-webserver.md)
 
 - this one **runs everything in Docker containers**, so it's likely more predictable and less fragile (see [Docker images used by this playbook](container-images.md))
 
@@ -262,7 +262,7 @@ matrix_server_fqn_element: "element.YOUR_BASE_DOMAIN"
 # Feel free to use `dimension.matrix.YOUR_BASE_DOMAIN`, if you'd prefer that.
 matrix_server_fqn_dimension: "dimension.YOUR_BASE_DOMAIN"
 
-# This is where you access Jitsi (if enabled via `jitsi_enabled: true`; NOT enabled by default).
+# This is where you access Jitsi (if enabled via `matrix_jitsi_enabled: true`; NOT enabled by default).
 #
 # Feel free to use `jitsi.matrix.YOUR_BASE_DOMAIN`, if you'd prefer that.
 matrix_server_fqn_jitsi: "jitsi.YOUR_BASE_DOMAIN"
@@ -285,7 +285,7 @@ You can disable some not-so-important services to save on memory.
 matrix_ma1sd_enabled: false
 
 # Disabling this will prevent email-notifications and other such things from working.
-exim_relay_enabled: false
+matrix_mailer_enabled: false
 
 # You can also disable this to save more RAM,
 # at the expense of audio/video calls being unreliable.
@@ -317,12 +317,12 @@ If you've installed [Jitsi](configuring-playbook-jitsi.md) (not installed by def
 Yes, we can stop installing Docker ourselves. Just use this in your `vars.yml` file:
 
 ```yaml
-matrix_playbook_docker_installation_enabled: false
+matrix_docker_installation_enabled: true
 ```
 
 ### I run another webserver on the same server where I wish to install Matrix. What now?
 
-By default, we install a webserver for you ([Traefik](https://doc.traefik.io/traefik/)), but you can also use [your own webserver](configuring-playbook-own-webserver.md).
+By default, we install a webserver for you (nginx), but you can also use [your own webserver](configuring-playbook-own-webserver.md).
 
 ### How is the effective configuration determined?
 
@@ -336,13 +336,11 @@ Configuration variables are defined in multiple places in this playbook and are 
 
 ### What configuration variables are available?
 
-You can discover the variables you can override in each role (`roles/*/*/defaults/main.yml`).
+You can discover the variables you can override in each role (`role/matrix*/defaults/main.yml`).
 
 As described in [How is the effective configuration determined?](#how-is-the-effective-configuration-determined), these role-defaults may be overriden by values defined in `group_vars/matrix_servers`.
 
 Refer to both of these for inspiration. Still, as mentioned in [Configuring the playbook](configuring-playbook.md), you're only ever supposed to edit your own `inventory/host_vars/matrix.DOMAIN/vars.yml` file and nothing else inside the playbook (unless you're meaning to contribute new features).
-
-**Note**: some of the roles (`roles/galaxy/*`) live in separate repositories and are only installed after your run `just roles` (or `make roles`).
 
 ### I'd like to adjust some configuration which doesn't have a corresponding variable. How do I do it?
 
@@ -354,9 +352,7 @@ See [What configuration variables are available?](#what-configuration-variables-
 
 Besides that, each role (component) aims to provide a `matrix_SOME_COMPONENT_configuration_extension_yaml` (or `matrix_SOME_COMPONENT_configuration_extension_json`) variable, which can be used to override the configuration.
 
-Check each role's `roles/*/*/defaults/main.yml` for the corresponding variable and an example for how use it.
-
-**Note**: some of the roles (`roles/galaxy/*`) live in separate repositories and are only installed after your run `just roles` (or `make roles`).
+Check each role's `role/matrix*/defaults/main.yml` for the corresponding variable and an example for how use it.
 
 
 ## Installation
@@ -465,8 +461,15 @@ After verifying that everything still works after the Postgres upgrade, you can 
 
 ### How do I debug or force SSL certificate renewal?
 
-SSL certificates are managed automatically by the [Traefik](https://doc.traefik.io/traefik/) reverse-proxy server.
+SSL certificate renewal normally happens automatically via [systemd timers](https://wiki.archlinux.org/index.php/Systemd/Timers).
 
-If you're having trouble with SSL certificate renewal, check the Traefik logs (`journalctl -fu matrix-traefik`).
+If you're having trouble with SSL certificate renewal, you can inspect the renewal logs using:
 
-If you're [using your own webserver](configuring-playbook-own-webserver.md) instead of the integrated one (Traefik), you should investigate in another way.
+- `journalctl -fu matrix-ssl-lets-encrypt-certificates-renew.service`
+- *or* by looking at the log files in `/matrix/ssl/log/`
+
+To trigger renewal, run: `systemctl start matrix-ssl-lets-encrypt-certificates-renew.service`. You can then take a look at the logs again.
+
+If you're using the integrated webserver (`matrix-nginx-proxy`), you can reload it manually like this: `systemctl reload matrix-nginx-proxy`. Reloading also happens periodically via a systemd timer.
+
+If you're [using your own webserver](configuring-playbook-own-webserver.md) instead of the integrated one (`matrix-nginx-proxy`) you may also need to reload/restart it, to make it pick up the renewed SSL certificate files.

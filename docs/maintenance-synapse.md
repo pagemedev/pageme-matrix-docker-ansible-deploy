@@ -14,13 +14,20 @@ Table of contents:
 
 ## Purging old data with the Purge History API
 
-You can use the **[Purge History API](https://github.com/element-hq/synapse/blob/master/docs/admin_api/purge_history_api.md)** to delete old messages on a per-room basis. **This is destructive** (especially for non-federated rooms), because it means **people will no longer have access to history past a certain point**.
+You can use the **[Purge History API](https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_history_api.md)** to delete old messages on a per-room basis. **This is destructive** (especially for non-federated rooms), because it means **people will no longer have access to history past a certain point**.
 
-To make use of this Synapse Admin API, **you'll need an admin access token** first. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
+To make use of this API, **you'll need an admin access token** first. You can find your access token in the setting of some clients (like Element).
+Alternatively, you can log in and obtain a new access token like this:
 
-Synapse's Admin API is not exposed to the internet by default, following [official Synapse reverse-proxying recommendations](https://github.com/element-hq/synapse/blob/master/docs/reverse_proxy.md#synapse-administration-endpoints). To expose it you will need to add `matrix_synapse_container_labels_public_client_synapse_admin_api_enabled: true` to your `vars.yml` file.
+```
+curl \
+--data '{"identifier": {"type": "m.id.user", "user": "YOUR_MATRIX_USERNAME" }, "password": "YOUR_MATRIX_PASSWORD", "type": "m.login.password", "device_id": "Synapse-Purge-History-API"}' \
+https://matrix.DOMAIN/_matrix/client/r0/login
+```
 
-Follow the [Purge History API](https://github.com/element-hq/synapse/blob/master/docs/admin_api/purge_history_api.md) documentation page for the actual purging instructions.
+Synapse's Admin API is not exposed to the internet by default. To expose it you will need to add `matrix_nginx_proxy_proxy_matrix_client_api_forwarded_location_synapse_admin_api_enabled: true` to your `vars.yml` file.
+
+Follow the [Purge History API](https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_history_api.md) documentation page for the actual purging instructions.
 
 After deleting data, you may wish to run a [`FULL` Postgres `VACUUM`](./maintenance-postgres.md#vacuuming-postgresql).
 
@@ -29,9 +36,7 @@ After deleting data, you may wish to run a [`FULL` Postgres `VACUUM`](./maintena
 
 [rust-synapse-compress-state](https://github.com/matrix-org/rust-synapse-compress-state) can be used to optimize some `_state` tables used by Synapse. If your server participates in large rooms this is the most effective way to reduce the size of your database.
 
-**Note**: besides running the `rust-synapse-compress-state` tool manually, you can also enable its `synapse-auto-compressor` tool by [Setting up synapse-auto-compressor](configuring-playbook-synapse-auto-compressor.md). The automatic tool will run on a schedule every day and you won't have to compress state manually ever again.
-
-`rust-synapse-compress-state` should be safe to use (even when Synapse is running), but it's always a good idea to [make Postgres backups](./maintenance-postgres.md#backing-up-postgresql) first.
+This tool should be safe to use (even when Synapse is running), but it's always a good idea to [make Postgres backups](./maintenance-postgres.md#backing-up-postgresql) first.
 
 To ask the playbook to run rust-synapse-compress-state, execute:
 
@@ -47,7 +52,7 @@ After state compression, you may wish to run a [`FULL` Postgres `VACUUM`](./main
 
 ## Browse and manipulate the database
 
-When the [Synapse Admin API](https://github.com/element-hq/synapse/tree/master/docs/admin_api) and the other tools do not provide a more convenient way, having a look at synapse's postgresql database can satisfy a lot of admins' needs.
+When the [Synapse Admin API](https://github.com/matrix-org/synapse/tree/master/docs/admin_api) and the other tools do not provide a more convenient way, having a look at synapse's postgresql database can satisfy a lot of admins' needs.
 
 Editing the database manually is not recommended or supported by the Synapse developers. If you are going to do so you should [make a database backup](./maintenance-postgres.md#backing-up-postgresql).
 
@@ -72,10 +77,8 @@ You should then be able to browse the adminer database administration GUI at htt
 
 Synapse's presence feature which tracks which users are online and which are offline can use a lot of processing power. You can disable presence by adding `matrix_synapse_presence_enabled: false` to your `vars.yml` file.
 
-If you have enough compute resources (CPU & RAM), you can make Synapse better use of them by [enabling load-balancing with workers](configuring-playbook-synapse.md#load-balancing-with-workers).
+Tuning Synapse's cache factor can help reduce RAM usage. [See the upstream documentation](https://github.com/matrix-org/synapse#help-synapse-is-slow-and-eats-all-my-ram-cpu) for more information on what value to set the cache factor to. Use the variable `matrix_synapse_caches_global_factor` to set the cache factor.
 
-Tuning Synapse's cache factor can help reduce RAM usage. [See the upstream documentation](https://github.com/element-hq/synapse#help-synapse-is-slow-and-eats-all-my-ram-cpu) for more information on what value to set the cache factor to. Use the variable `matrix_synapse_caches_global_factor` to set the cache factor.
-
-[Tuning your PostgreSQL database](maintenance-postgres.md#tuning-postgresql) could also improve Synapse performance. The playbook tunes the integrated Postgres database automatically, but based on your needs you may wish to adjust tuning variables manually. If you're using an [external Postgres database](configuring-playbook-external-postgres.md), you will aslo need to tune Postgres manually.
+Tuning your PostgreSQL database will also make Synapse run significantly faster. See [maintenance-postgres.md##tuning-postgresql](maintenance-postgres.md##tuning-postgresql).
 
 See also [How do I optimize this setup for a low-power server?](faq.md#how-do-i-optimize-this-setup-for-a-low-power-server).

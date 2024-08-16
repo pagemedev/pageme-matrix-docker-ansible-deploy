@@ -11,19 +11,6 @@ matrix_mautrix_whatsapp_enabled: true
 ``` 
 Whatsapp multidevice beta is required, now it is enough if Whatsapp is connected to the Internet every 2 weeks.
 
-The relay bot functionality is off by default. If you would like to enable the relay bot, add the following to your `vars.yml` file:
-```yaml
-matrix_mautrix_whatsapp_bridge_relay_enabled: true
-```
-
-By default, only admins are allowed to set themselves as relay users. To allow anyone on your homeserver to set themselves as relay users add this to your `vars.yml` file:
-```yaml
-matrix_mautrix_whatsapp_bridge_relay_admin_only: false
-```
-
-If you want to activate the relay bot in a room, use `!wa set-relay`.
-Use `!wa unset-relay` to deactivate.
-
 ## Enable backfilling history
 This requires a server with MSC2716 support, which is currently an experimental feature in synapse.
 Note that as of Synapse 1.46, there are still some bugs with the implementation, especially if using event persistence workers.
@@ -57,7 +44,13 @@ This is the recommended way of setting up Double Puppeting, as it's easier to ac
 
 When using this method, **each user** that wishes to enable Double Puppeting needs to follow the following steps:
 
-- retrieve a Matrix access token for yourself. Refer to the documentation on [how to do that](obtaining-access-tokens.md).
+- retrieve a Matrix access token for yourself. You can use the following command:
+
+```
+curl \
+--data '{"identifier": {"type": "m.id.user", "user": "YOUR_MATRIX_USERNAME" }, "password": "YOUR_MATRIX_PASSWORD", "type": "m.login.password", "device_id": "Mautrix-Whatsapp", "initial_device_display_name": "Mautrix-Whatsapp"}' \
+https://matrix.DOMAIN/_matrix/client/r0/login
+```
 
 - send the access token to the bot. Example: `login-matrix MATRIX_ACCESS_TOKEN_HERE`
 

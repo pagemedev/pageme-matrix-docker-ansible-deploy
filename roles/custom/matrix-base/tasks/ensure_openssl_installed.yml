@@ -1,6 +1,0 @@
----
-
-- name: Ensure openssl installed
-  ansible.builtin.package:
-    name: openssl
-    state: present

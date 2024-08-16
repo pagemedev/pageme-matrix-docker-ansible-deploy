@@ -12,27 +12,24 @@ If your database name differs, be sure to change `matrix_synapse_database_databa
 
 The playbook supports importing Postgres dump files in **text** (e.g. `pg_dump > dump.sql`) or **gzipped** formats (e.g. `pg_dump | gzip -c > dump.sql.gz`).
 
-Importing multiple databases (as dumped by `pg_dumpall`) is also supported.
-But the migration might be a good moment, to "reset" a not properly working bridge. Be aware, that it might affect all users (new link to bridge, new rooms, ...)
+Importing multiple databases (as dumped by `pg_dumpall`) is also supported.  
+But the migration might be a good moment, to "reset" a not properly working bridge. Be aware, that it might affect all users (new link to bridge, new roomes, ...)
 
 Before doing the actual import, **you need to upload your Postgres dump file to the server** (any path is okay).
 
 
 ## Importing
 
-To import, run this command (make sure to replace `SERVER_PATH_TO_POSTGRES_DUMP_FILE` with a file path on your server):
+To import, run this command (make sure to replace `<server-path-to-postgres-dump.sql>` with a file path on your server):
 
 ```sh
-just run-tags import-postgres \
---extra-vars=server_path_postgres_dump=SERVER_PATH_TO_POSTGRES_DUMP_FILE \
---extra-vars=postgres_default_import_database=matrix
+ansible-playbook -i inventory/hosts setup.yml \
+--extra-vars='server_path_postgres_dump=<server-path-to-postgres-dump.sql>' \
+--tags=import-postgres
 ```
 
-**Notes**:
+**Note**: `<server-path-to-postgres-dump.sql>` must be a file path to a Postgres dump file on the server (not on your local machine!).
 
-- `SERVER_PATH_TO_POSTGRES_DUMP_FILE` must be a file path to a Postgres dump file on the server (not on your local machine!)
-- `postgres_default_import_database` defaults to `matrix`, which is useful for importing multiple databases (for dumps made with `pg_dumpall`). If you're importing a single database (e.g. `synapse`), consider changing `postgres_default_import_database` accordingly
-- after importing a large database, it's a good idea to run [an `ANALYZE` operation](https://www.postgresql.org/docs/current/sql-analyze.html) to make Postgres rebuild its database statistics and optimize its query planner. You can easily do this via the playbook by running `just run-tags run-postgres-vacuum -e postgres_vacuum_preset=analyze` (see [Vacuuming PostgreSQL](maintenance-postgres.md#vacuuming-postgresql) for more details).
 
 ## Troubleshooting
 
@@ -86,20 +83,20 @@ In this case you can use the command suggested in the import task to clear the d
 # systemctl start matrix-postgres
 ```
 
-Now on your local machine run `just run-tags setup-postgres` to prepare the database roles etc.
+Now on your local machine run `ansible-playbook -i inventory/hosts setup.yml --tags=setup-postgres` to prepare the database roles etc.
 
 If not, you probably get this error. `synapse` is the correct table owner, but the role is missing in database.
 ```
 "ERROR:  role synapse does not exist"
 ```
 
-Once the database is clear and the ownership of the tables has been fixed in the SQL file, the import task should succeed.
+Once the database is clear and the ownership of the tables has been fixed in the SQL file, the import task should succeed.  
 Check, if `--dbname` is set to `synapse` (not `matrix`) and replace paths (or even better, copy this line from your terminal)
 
 ```
-/usr/bin/env docker run --rm --name matrix-postgres-import --log-driver=none --user=998:1001 --cap-drop=ALL --network=matrix --env-file=/matrix/postgres/env-postgres-psql --mount type=bind,src=/migration/synapse_dump.sql,dst=/synapse_dump.sql,ro --entrypoint=/bin/sh docker.io/postgres:15.0-alpine -c "cat /synapse_dump.sql | grep -vE '^(CREATE|ALTER) ROLE (matrix)(;| WITH)' | grep -vE '^CREATE DATABASE (matrix)\s' | psql -v ON_ERROR_STOP=1 -h matrix-postgres --dbname=synapse"
+/usr/bin/env docker run --rm --name matrix-postgres-import --log-driver=none --user=998:1001 --cap-drop=ALL --network=matrix --env-file=/matrix/postgres/env-postgres-psql --mount type=bind,src=/migration/synapse_dump.sql,dst=/synapse_dump.sql,ro --entrypoint=/bin/sh docker.io/postgres:14.1-alpine -c "cat /synapse_dump.sql | grep -vE '^(CREATE|ALTER) ROLE (matrix)(;| WITH)' | grep -vE '^CREATE DATABASE (matrix)\s' | psql -v ON_ERROR_STOP=1 -h matrix-postgres --dbname=synapse"
 ```
 
 ### Hints
 
-To open psql terminal run `/matrix/postgres/bin/cli`
+To open psql terminal run `/usr/local/bin/matrix-postgres-cli`

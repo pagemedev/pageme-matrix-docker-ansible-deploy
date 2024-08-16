@@ -38,27 +38,30 @@ To learn how to set it up, read the Installing section below.
 
 ## (Optional) Introduction to Homeserver Admin Contact and Support page
 
-[MSC 1929](https://github.com/matrix-org/matrix-spec-proposals/pull/1929) specifies a way to add contact details of admins, as well as a link to a support page for users who are having issues with the service. Automated services may also index this information and use it for abuse reports, etc.
+[MSC 1929](https://github.com/matrix-org/matrix-spec-proposals/pull/1929) specifies a way to add contact details of admins, as well as a link to a support page for users who are having issues with the service.
 
-The two playbook variables that you could look for, if you're interested in being an early adopter, are: `matrix_static_files_file_matrix_support_property_m_contacts` and `matrix_static_files_file_matrix_support_property_m_support_page`.
+This MSC did not get accepted yet, but we think it might already be useful to Homeserver admins who wish to provide this information to end-users.
+
+The two playbook variables that you could look for, if you're interested in being an early adopter, are: `matrix_homeserver_admin_contacts` and `matrix_homeserver_support_url`.
 
 Example snippet for `vars.yml`:
 ```
 # Enable generation of `/.well-known/matrix/support`.
-matrix_static_files_file_matrix_support_enabled: true
+# This needs to be enabled explicitly for now, because MSC 1929 is not yet accepted.
+matrix_well_known_matrix_support_enabled: true
 
 # Homeserver admin contacts as per MSC 1929 https://github.com/matrix-org/matrix-spec-proposals/pull/1929
-matrix_static_files_file_matrix_support_property_m_contacts:
+matrix_homeserver_admin_contacts:
   - matrix_id: "@admin1:{{ matrix_domain }}"
     email_address: admin@domain.tld
-    role: m.role.admin
+    role: admin
   - matrix_id: "@admin2:{{ matrix_domain }}"
     email_address: admin2@domain.tld
-    role: m.role.admin
+    role: admin
   - email_address: security@domain.tld
-    role: m.role.security
+    role: security
 
-matrix_static_files_file_matrix_support_property_m_support_page: "https://example.domain.tld/support"
+matrix_homeserver_support_url: "https://example.domain.tld/support"
 ```
 
 To learn how to set up `/.well-known/matrix/support` for the base domain, read the Installing section below.
@@ -120,7 +123,6 @@ server {
 	location /.well-known/matrix {
 		proxy_pass https://matrix.example.com/.well-known/matrix;
 		proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_ssl_server_name on;
 	}
 
 	# other configuration
@@ -170,9 +172,10 @@ backend matrix-backend
 	rsprep ^Location:\ (http|https)://matrix.example.com\/(.*) Location:\ \1://matrix.example.com/.well-known/matrix/\2 if response-is-redirect
 ```
 
-**For Netlify**, configure a [redirect](https://docs.netlify.com/routing/redirects/) using a `_redirects` file in the [publish directory](https://docs.netlify.com/configure-builds/overview/#definitions) with contents like this:
+**For Netlify**, it would be something like this:
 
 ```
+# In the _redirects file in the website's root
 /.well-known/matrix/* https://matrix.example.com/.well-known/matrix/:splat 200!
 ```
 
@@ -189,7 +192,7 @@ Make sure to:
 
 ## Confirming it works
 
-No matter which method you've used to set up the well-known files, if you've done it correctly you should be able to see a JSON file at these URLs:
+No matter which method you've used to set up the well-known files, if you've done it correctly you should be able to see a JSON file at both of these URLs:
 
 - `https://<domain>/.well-known/matrix/server`
 - `https://<domain>/.well-known/matrix/client`

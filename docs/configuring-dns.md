@@ -26,37 +26,26 @@ Be mindful as to how long it will take for the DNS records to propagate.
 
 If you are using Cloudflare DNS, make sure to disable the proxy and set all records to `DNS only`. Otherwise, fetching certificates will fail.
 
-When you're done configuring DNS, proceed to [Configuring the playbook](configuring-playbook.md).
-
 ## DNS settings for optional services/features
 
-| Used by component                                                                                                       | Type  | Host                           | Priority | Weight | Port | Target                      |
-| ----------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------ | -------- | ------ | ---- | --------------------------- |
-| [ma1sd](configuring-playbook-ma1sd.md) identity server                                                                  | SRV   | `_matrix-identity._tcp`        | 10       | 0      | 443  | `matrix.<your-domain>`      |
-| [Dimension](configuring-playbook-dimension.md) integration server                                                       | CNAME | `dimension`                    | -        | -      | -    | `matrix.<your-domain>`      |
-| [Jitsi](configuring-playbook-jitsi.md) video-conferencing platform                                                      | CNAME | `jitsi`                        | -        | -      | -    | `matrix.<your-domain>`      |
-| [Prometheus/Grafana](configuring-playbook-prometheus-grafana.md) monitoring system                                      | CNAME | `stats`                        | -        | -      | -    | `matrix.<your-domain>`      |
-| [Go-NEB](configuring-playbook-bot-go-neb.md) bot                                                                        | CNAME | `goneb`                        | -        | -      | -    | `matrix.<your-domain>`      |
-| [Sygnal](configuring-playbook-sygnal.md) push notification gateway                                                      | CNAME | `sygnal`                       | -        | -      | -    | `matrix.<your-domain>`      |
-| [ntfy](configuring-playbook-ntfy.md) push notifications server                                                          | CNAME | `ntfy`                         | -        | -      | -    | `matrix.<your-domain>`      |
-| [Etherpad](configuring-playbook-etherpad.md) collaborative text editor                                                  | CNAME | `etherpad`                     | -        | -      | -    | `matrix.<your-domain>`      |
-| [Hydrogen](configuring-playbook-client-hydrogen.md) web client                                                          | CNAME | `hydrogen`                     | -        | -      | -    | `matrix.<your-domain>`      |
-| [Cinny](configuring-playbook-client-cinny.md) web client                                                                | CNAME | `cinny`                        | -        | -      | -    | `matrix.<your-domain>`      |
-| [SchildiChat](configuring-playbook-client-schildichat.md) web client                                                    | CNAME | `schildichat`                  | -        | -      | -    | `matrix.<your-domain>`      |
-| [wsproxy](configuring-playbook-bridge-mautrix-wsproxy.md) sms bridge                                                    | CNAME | `wsproxy`                      | -        | -      | -    | `matrix.<your-domain>`      |
-| [Buscarron](configuring-playbook-bot-buscarron.md) helpdesk bot                                                         | CNAME | `buscarron`                    | -        | -      | -    | `matrix.<your-domain>`      |
-| [Postmoogle](configuring-playbook-bot-postmoogle.md)/[Email2Matrix](configuring-playbook-email2matrix.md) email bridges | MX    | `matrix`                       | 10       | 0      | -    | `matrix.<your-domain>`      |
-| [Postmoogle](configuring-playbook-bot-postmoogle.md) email bridge                                                       | TXT   | `matrix`                       | -        | -      | -    | `v=spf1 ip4:<your-ip> -all` |
-| [Postmoogle](configuring-playbook-bot-postmoogle.md) email bridge                                                       | TXT   | `_dmarc.matrix`                | -        | -      | -    | `v=DMARC1; p=quarantine;`   |
-| [Postmoogle](configuring-playbook-bot-postmoogle.md) email bridge                                                       | TXT   | `postmoogle._domainkey.matrix` | -        | -      | -    | get it from `!pm dkim`      |
-
-When setting up a SRV record, if you are asked for a service and protocol instead of a hostname split the host value from the table where the period is. For example use service as `_matrix-identity` and protocol as `_tcp`.
+| Type  | Host                         | Priority | Weight | Port | Target                 |
+| ----- | ---------------------------- | -------- | ------ | ---- | ---------------------- |
+| SRV   | `_matrix-identity._tcp`      | 10       | 0      | 443  | `matrix.<your-domain>` |
+| CNAME | `dimension`                  | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `jitsi`                      | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `stats`                      | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `goneb`                      | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `sygnal`                     | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `ntfy`                       | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `hydrogen`                   | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `cinny`                      | -        | -      | -    | `matrix.<your-domain>` |
+| CNAME | `buscarron`                  | -        | -      | -    | `matrix.<your-domain>` |
 
 ## Subdomains setup
 
 As the table above illustrates, you need to create 2 subdomains (`matrix.<your-domain>` and `element.<your-domain>`) and point both of them to your new server's IP address (DNS `A` record or `CNAME` record is fine).
 
-The `element.<your-domain>` subdomain may be necessary, because this playbook installs the [Element](https://github.com/element-hq/element-web) web client for you.
+The `element.<your-domain>` subdomain may be necessary, because this playbook installs the [Element](https://github.com/vector-im/element-web) web client for you.
 If you'd rather instruct the playbook not to install Element (`matrix_client_element_enabled: false` when [Configuring the playbook](configuring-playbook.md) later), feel free to skip the `element.<your-domain>` DNS record.
 
 The `dimension.<your-domain>` subdomain may be necessary, because this playbook could install the [Dimension integrations manager](http://dimension.t2bot.io/) for you. Dimension installation is disabled by default, because it's only possible to install it after the other Matrix services are working (see [Setting up Dimension](configuring-playbook-dimension.md) later). If you do not wish to set up Dimension, feel free to skip the `dimension.<your-domain>` DNS record.
@@ -71,13 +60,9 @@ The `sygnal.<your-domain>` subdomain may be necessary, because this playbook cou
 
 The `ntfy.<your-domain>` subdomain may be necessary, because this playbook could install the [ntfy](https://ntfy.sh/) UnifiedPush-compatible push notifications server. The installation of ntfy is disabled by default, it is not a core required component. To learn how to install it, see our [configuring ntfy guide](configuring-playbook-ntfy.md). If you do not wish to set up ntfy, feel free to skip the `ntfy.<your-domain>` DNS record.
 
-The `etherpad.<your-domain>` subdomain may be necessary, because this playbook could install the [Etherpad](https://etherpad.org/) a highly customizable open source online editor providing collaborative editing in really real-time. The installation of etherpad is disabled by default, it is not a core required component. To learn how to install it, see our [configuring etherpad guide](configuring-playbook-etherpad.md). If you do not wish to set up etherpad, feel free to skip the `etherpad.<your-domain>` DNS record.
-
-The `hydrogen.<your-domain>` subdomain may be necessary, because this playbook could install the [Hydrogen](https://github.com/element-hq/hydrogen-web) web client. The installation of Hydrogen is disabled by default, it is not a core required component. To learn how to install it, see our [configuring Hydrogen guide](configuring-playbook-client-hydrogen.md). If you do not wish to set up Hydrogen, feel free to skip the `hydrogen.<your-domain>` DNS record.
+The `hydrogen.<your-domain>` subdomain may be necessary, because this playbook could install the [Hydrogen](https://github.com/vector-im/hydrogen-web) web client. The installation of Hydrogen is disabled by default, it is not a core required component. To learn how to install it, see our [configuring Hydrogen guide](configuring-playbook-client-hydrogen.md). If you do not wish to set up Hydrogen, feel free to skip the `hydrogen.<your-domain>` DNS record.
 
 The `cinny.<your-domain>` subdomain may be necessary, because this playbook could install the [Cinny](https://github.com/ajbura/cinny) web client. The installation of cinny is disabled by default, it is not a core required component. To learn how to install it, see our [configuring cinny guide](configuring-playbook-client-cinny.md). If you do not wish to set up cinny, feel free to skip the `cinny.<your-domain>` DNS record.
-
-The `wsproxy.<your-domain>` subdomain may be necessary, because this playbook could install the [wsproxy](https://github.com/mautrix/wsproxy) web client. The installation of wsproxy is disabled by default, it is not a core required component. To learn how to install it, see our [configuring wsproxy guide](configuring-playbook-bridge-mautrix-wsproxy.md). If you do not wish to set up wsproxy, feel free to skip the `wsproxy.<your-domain>` DNS record.
 
 The `buscarron.<your-domain>` subdomain may be necessary, because this playbook could install the [buscarron](https://gitlab.com/etke.cc/buscarron) bot. The installation of buscarron is disabled by default, it is not a core required component. To learn how to install it, see our [configuring buscarron guide](configuring-playbook-bot-buscarron.md). If you do not wish to set up buscarron, feel free to skip the `buscarron.<your-domain>` DNS record.
 
@@ -92,8 +77,3 @@ This is an optional feature for the optionally-installed [ma1sd service](configu
 Note: This `_matrix-identity._tcp` SRV record for the identity server is different from the `_matrix._tcp` that can be used for Synapse delegation. See [howto-server-delegation.md](howto-server-delegation.md) for more information about delegation.
 
 When you're done with the DNS configuration and ready to proceed, continue with [Getting the playbook](getting-the-playbook.md).
-
-## `_dmarc`, `postmoogle._domainkey` TXT and `matrix` MX records setup
-
-To make the [postmoogle](configuring-playbook-bot-postmoogle.md) email bridge enable its email sending features, you need to configure
-SPF (TXT), DMARC (TXT), DKIM (TXT) and MX records
